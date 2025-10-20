@@ -26,23 +26,33 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
 
   // APIやGeminiなどはキャッシュしない
-  if (req.method !== "GET" || /\/api|generative|gemini/i.test(url.href)) return;
+  if (req.method !== "GET" || /\/api|generative|gemini/i.test(url.href)) {
+    return;
+  }
 
   // HTMLはネット優先、だめならキャッシュ→さらにだめならoffline.html
   if (req.headers.get("accept")?.includes("text/html")) {
     event.respondWith(
-      fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(STATIC_CACHE).then((c) => c.put(req, copy));
-        return res;
-      }).catch(async () => {
-        const cache = await caches.open(STATIC_CACHE);
-        return (await cache.match(req)) || cache.match("/offline.html");
-      })
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(STATIC_CACHE).then((c) => c.put(req, copy));
+          return res;
+        })
+        .catch(async () => {
+          const cache = await caches.open(STATIC_CACHE);
+          // まず同じURL、ダメなら / or /index.html、最後に offline.html
+          return (
+            (await cache.match(req)) ||
+            (await cache.match("/")) ||
+            (await cache.match("/index.html")) ||
+            (await cache.match("/offline.html"))
+          );
+        })
     );
     return;
   }
-
+  
   // 静的アセットはキャッシュ優先
   event.respondWith(
     caches.match(req).then(
