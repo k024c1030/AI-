@@ -4,7 +4,7 @@ const STATIC_ASSETS = [
   "/", 
   "/index.html",
   "/offline.html",
-  "/manifest.webmanifest"
+  "/manifest.json"
 ];
 
 self.addEventListener("install", (event) => {
