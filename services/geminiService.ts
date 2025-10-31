@@ -28,19 +28,27 @@ const SYSTEM_INSTRUCTION_ANALYSIS = `あなたはユーザーのチャット履�
 let ai: GoogleGenAI | null = null;
 let chat: Chat | null = null;
 
-function getAi() {
-  if (!ai) {
-    if (!process.env.API_KEY) {
-      throw new Error("API_KEY environment variable not set");
+function getApiKey(): string{
+    const key = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+    if (!key) {
+        throw new Error("設定エラー：VITE_GEMINI_API_KEYが未設定です(vercelのEnvironment Variablesに追加して再デプロイしてください)");
+        }
+        return key;
+}
+
+function getAi(){
+    if (!ai) {
+        const apiKey = getApiKey();
+        ai = new GoogleGenAI({ apiKey });
     }
-    ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  }
-  return ai;
+    return ai;
 }
 
 export const startChat = (aiName: string): Chat => {
     const genAI = getAi();
     const systemInstruction = SYSTEM_INSTRUCTION_CHAT.replace('{AI_NAME}', aiName);
+
+    //ここでエラーしてもUI側で拾えるようにそのまま投げる
     chat = genAI.chats.create({
         model: 'gemini-2.5-flash',
         config: {
@@ -131,7 +139,7 @@ export const analyzeAndCreateMonster = async (history: ChatMessage[]): Promise<M
             name: analysis.monsterName,
             description: analysis.monsterDescription,
             score: analysis.stressScore,
-            currentHP: 0, // Will be set to score in App.tsx
+            currentHP: 0, // App.tsxで上書き想定
             imageUrl: imageUrl,
         };
     } catch (error) {
