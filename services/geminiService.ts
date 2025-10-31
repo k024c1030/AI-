@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { GoogleGenAI, Chat, Type } from "@google/genai";
 import type { ChatMessage, StressAnalysis, Monster } from '../types';
 import { MessageRole } from '../types';
