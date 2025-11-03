@@ -3,6 +3,7 @@ import type { Monster, ToDoItem } from '../types';
 
 interface HomeProps {
   onStart: () => void;
+  onSaveAndStart: (name: string) => void;
   onSaveName: (name: string) => void;
   aiName: string | null;
   monster: Monster | null;
@@ -15,7 +16,7 @@ interface HomeProps {
   onToggleFavoriteToDo: (id: number) => void;
 }
 
-const Home: React.FC<HomeProps> = ({ onStart, onSaveName, aiName, monster, onAttack, powerBank, toDoList, onToggleToDo, onOpenToDo, onDeleteToDo, onToggleFavoriteToDo }) => {
+const Home: React.FC<HomeProps> = ({ onStart, onSaveAndStart, onSaveName, aiName, monster, onAttack, powerBank, toDoList, onToggleToDo, onOpenToDo, onDeleteToDo, onToggleFavoriteToDo }) => {
   const [nameInput, setNameInput] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
 
@@ -24,13 +25,6 @@ const Home: React.FC<HomeProps> = ({ onStart, onSaveName, aiName, monster, onAtt
       setNameInput(aiName);
     }
   }, [aiName]);
-
-  const handleSaveAndStart = () => {
-    if (nameInput.trim()) {
-      onSaveName(nameInput);
-      onStart();
-    }
-  };
   
   const handleSave = () => {
     if (nameInput.trim()){
@@ -183,7 +177,7 @@ const Home: React.FC<HomeProps> = ({ onStart, onSaveName, aiName, monster, onAtt
                  </div>
              ) : (
                 <button
-                    onClick={handleSaveAndStart}
+                    onClick={() => onSaveAndStart(nameInput)}
                     disabled={!nameInput.trim()}
                     className="w-full px-10 py-4 bg-teal-500 text-white rounded-xl font-semibold text-lg hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all duration-200 transform hover:scale-105 shadow-lg disabled:bg-slate-300 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none"
                 >

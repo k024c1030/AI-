@@ -1,4 +1,3 @@
-/// <reference types="vite/client" />
 import { GoogleGenAI, Chat, Type } from "@google/genai";
 import type { ChatMessage, StressAnalysis, Monster } from '../types';
 import { MessageRole } from '../types';
@@ -29,17 +28,13 @@ const SYSTEM_INSTRUCTION_ANALYSIS = `あなたはユーザーのチャット履�
 let ai: GoogleGenAI | null = null;
 let chat: Chat | null = null;
 
-function getApiKey(): string{
-    const key = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
-    if (!key) {
-        throw new Error("設定エラー：VITE_GEMINI_API_KEYが未設定です(vercelのEnvironment Variablesに追加して再デプロイしてください)");
-        }
-        return key;
-}
-
 function getAi(){
     if (!ai) {
-        const apiKey = getApiKey();
+        // Fix: Switched to using process.env.API_KEY as per Gemini API coding guidelines.
+        const apiKey = process.env.API_KEY;
+        if (!apiKey) {
+            throw new Error("API_KEY environment variable not set. Please configure it in your environment.");
+        }
         ai = new GoogleGenAI({ apiKey });
     }
     return ai;

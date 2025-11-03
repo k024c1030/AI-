@@ -194,7 +194,18 @@ const App: React.FC = () => {
   };
 
   const handleStartChat = () => {
-    setAppState('CHAT');
+    if (aiName) {
+        setAppState('CHAT');
+    }
+  };
+
+  const handleSaveAndStart = (name: string) => {
+    const trimmedName = name.trim();
+    if (trimmedName) {
+        setAiName(trimmedName);
+        localStorage.setItem(AI_NAME_KEY, JSON.stringify(trimmedName));
+        setAppState('CHAT');
+    }
   };
 
   const handleMonsterGenerated = (generatedMonster: Monster) => {
@@ -356,6 +367,7 @@ const App: React.FC = () => {
       case 'HOME':
         return <Home 
                     onStart={handleStartChat}
+                    onSaveAndStart={handleSaveAndStart}
                     aiName={aiName}
                     onSaveName={handleSaveAiName}
                     monster={monster}
@@ -390,6 +402,7 @@ const App: React.FC = () => {
       default:
         return <Home 
                     onStart={handleStartChat} 
+                    onSaveAndStart={handleSaveAndStart}
                     aiName={aiName} 
                     onSaveName={handleSaveAiName}
                     monster={monster}

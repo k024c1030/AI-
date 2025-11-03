@@ -16,8 +16,8 @@ root.render(
 
 if ('serviceWorker' in navigator) {
   const registerServiceWorker = () => {
-    // ルートからの相対パスを使用する方がシンプルで確実です
-    const swUrl = `/sw.js`;
+    // ルートからの絶対パスを使用して、オリジンの問題を回避します
+    const swUrl = `${window.location.origin}/sw.js`;
     navigator.serviceWorker.register(swUrl)
       .then(registration => {
         console.log('Service Worker registered successfully:', registration);
