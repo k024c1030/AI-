@@ -104,9 +104,9 @@ const analyzeStress = async (history: ChatMessage[]): Promise<StressAnalysis> =>
     return JSON.parse(jsonText) as StressAnalysis;
 };
 
-    export async function generateMonseterImage(_prompt: string): Promise<string> {
-        // 仮のモンスター画像
-        return "../public/monster/kaiju_brown.png";
+    export async function generateMonsterImage(_prompt: string): Promise<string> {
+        // ローカルの固定モンスター画像を返す
+        return '/monsters/kaiju_brown.png';
     }
 
 
@@ -114,7 +114,7 @@ const analyzeStress = async (history: ChatMessage[]): Promise<StressAnalysis> =>
 export const analyzeAndCreateMonster = async (history: ChatMessage[]): Promise<Monster> => {
     try {
         const analysis = await analyzeStress(history);
-        const imageUrl = await generateImage(analysis.monsterDescription);
+        const imageUrl = await generateMonsterImage(analysis.monsterDescription);
 
         return {
             name: analysis.monsterName,

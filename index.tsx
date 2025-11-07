@@ -15,7 +15,9 @@ root.render(
 );
 
 if ('serviceWorker' in navigator) {
-  const registerServiceWorker = () => {
+  // windowのloadイベントを待ってからService Workerを登録するのが最も安全です。
+  // これにより「The document is in an invalid state」エラーを回避できます。
+  window.addEventListener('load', () => {
     // ルートからの絶対パスを使用して、オリジンの問題を回避します
     const swUrl = `${window.location.origin}/sw.js`;
     navigator.serviceWorker.register(swUrl)
@@ -25,13 +27,5 @@ if ('serviceWorker' in navigator) {
       .catch(error => {
         console.error('SW registration failed:', error);
       });
-  };
-
-  // ページがすでに完全に読み込まれている場合、すぐに登録します。
-  if (document.readyState === 'complete') {
-    registerServiceWorker();
-  } else {
-    // そうでない場合は、loadイベントを待ちます。
-    window.addEventListener('load', registerServiceWorker);
-  }
+  });
 }

@@ -18,14 +18,7 @@ const MonsterReveal: React.FC<MonsterRevealProps> = ({ monster, onOpenDiary, onA
         <p className="text-slate-600 mb-4">このモンスターは...</p>
         <h2 className="text-4xl font-bold text-orange-500 mb-4">{monster.name}</h2>
         <div className="w-64 h-64 mx-auto bg-slate-100 rounded-xl mb-4 flex items-center justify-center overflow-hidden">
-            {monster.imageUrl.startsWith('data:image') ? (
-                 <img src={monster.imageUrl} alt={monster.name} className="w-full h-full object-cover" />
-            ) : (
-                <div className="flex flex-col items-center text-slate-500">
-                    <LoadingSpinner />
-                    <p className="mt-2 text-sm">画像生成中...</p>
-                </div>
-            )}
+            <img src={monster.imageUrl} alt={monster.name} className="w-full h-full object-cover" />
         </div>
         <div className="w-full bg-slate-200 rounded-full h-6 border border-slate-300">
           <div
