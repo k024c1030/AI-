@@ -131,7 +131,7 @@ export const analyzeAndCreateMonster = async (history: ChatMessage[]): Promise<M
             description: "予期せぬエラーが発生しました。もう一度お試しください。",
             score: 50,
             currentHP: 50,
-            imageUrl: "https://via.placeholder.com/512x512?text=Error:("
+            imageUrl: "/monsters/kaiju_brown.png"
         };
     }
 };
