@@ -4,7 +4,8 @@ const STATIC_ASSETS = [
   "/", 
   "/index.html",
   "/offline.html",
-  "/manifest.json"
+  "/manifest.json",
+  "/monsters/kaiju_brown.png"
 ];
 
 self.addEventListener("install", (event) => {
