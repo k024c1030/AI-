@@ -104,26 +104,11 @@ const analyzeStress = async (history: ChatMessage[]): Promise<StressAnalysis> =>
     return JSON.parse(jsonText) as StressAnalysis;
 };
 
-const generateImage = async (prompt: string): Promise<string> => {
-    const ai = getAi();
-    const imagePrompt = `A cute, expressive monster character based on this description: "${prompt}". Minimalist, friendly, Japanese anime style, soft colors, on a simple light grey background.`;
-
-    const response = await ai.models.generateImages({
-        model: 'imagen-4.0-generate-001',
-        prompt: imagePrompt,
-        config: {
-          numberOfImages: 1,
-          outputMimeType: 'image/png',
-          aspectRatio: '1:1',
-        },
-    });
-
-    if (response.generatedImages && response.generatedImages.length > 0) {
-        const base64ImageBytes = response.generatedImages[0].image.imageBytes;
-        return `data:image/png;base64,${base64ImageBytes}`;
+    export async function generateMonseterImage(_prompt: string): Promise<string> {
+        // 仮のモンスター画像
+        return "../public/monster/kaiju_brown.png";
     }
-    throw new Error("Image generation failed.");
-};
+
 
 
 export const analyzeAndCreateMonster = async (history: ChatMessage[]): Promise<Monster> => {
