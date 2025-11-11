@@ -59,5 +59,28 @@ export interface ToDoItem {
   order: number;
 }
 
-
 export type AppState = 'HOME' | 'CHAT' | 'MONSTER_REVEAL' | 'ATTACK_RESULT';
+
+// --- New Types for Weather and Mood ---
+
+export interface LocationPreference {
+  method: 'auto' | 'manual';
+  lat?: number;
+  lon?: number;
+  query?: string;
+  name?: string; // e.g., "Tokyo"
+}
+
+export interface WeatherData {
+  icon: string; // Weather icon code from OpenWeatherMap
+  temp_c: number;
+  description: string;
+  message: string;
+  fetched_at: string; // ISO string
+}
+
+export interface MoodRecord {
+  date: string; // YYYY-MM-DD
+  score: number; // -3 to 3
+  emoji: string;
+}

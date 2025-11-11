@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import type { Monster, ToDoItem } from '../types';
+import type { Monster, ToDoItem, MoodRecord } from '../types';
+import WeatherAndMood from './WeatherAndMood';
 
 interface HomeProps {
   onStart: () => void;
@@ -14,9 +15,11 @@ interface HomeProps {
   onOpenToDo: () => void;
   onDeleteToDo: (id: number) => void;
   onToggleFavoriteToDo: (id: number) => void;
+  moodHistory: MoodRecord[];
+  onSaveMood: (record: MoodRecord) => void;
 }
 
-const Home: React.FC<HomeProps> = ({ onStart, onSaveAndStart, onSaveName, aiName, monster, onAttack, powerBank, toDoList, onToggleToDo, onOpenToDo, onDeleteToDo, onToggleFavoriteToDo }) => {
+const Home: React.FC<HomeProps> = ({ onStart, onSaveAndStart, onSaveName, aiName, monster, onAttack, powerBank, toDoList, onToggleToDo, onOpenToDo, onDeleteToDo, onToggleFavoriteToDo, moodHistory, onSaveMood }) => {
   const [nameInput, setNameInput] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
 
@@ -96,9 +99,11 @@ const Home: React.FC<HomeProps> = ({ onStart, onSaveAndStart, onSaveName, aiName
   // --- Chat Start View ---
   return (
     <div className="flex flex-col items-center justify-center text-center p-8 max-w-2xl mx-auto animate-fade-in-up">
+       <WeatherAndMood moodHistory={moodHistory} onSaveMood={onSaveMood} />
+
        <div className="w-full max-w-sm mb-8">
         <h2 className="text-xl font-bold text-slate-700 mb-3 text-left cursor-pointer hover:text-teal-600 transition-colors" onClick={onOpenToDo}>
-            今日のToBe
+            今日のToDo
         </h2>
         <div className="bg-white p-4 rounded-xl shadow-md border border-slate-200">
             {todaysToDos.length > 0 ? (

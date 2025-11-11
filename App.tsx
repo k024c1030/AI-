@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { AppState, Monster, StressRecord, SleepRecord, DiaryEntry, ToDoItem } from './types';
+import type { AppState, Monster, StressRecord, SleepRecord, DiaryEntry, ToDoItem, MoodRecord } from './types';
 import Home from './components/Home';
 import ChatWindow from './components/ChatWindow';
 import MonsterReveal from './components/MonsterReveal';
@@ -21,6 +21,7 @@ const LOGIN_DATA_KEY = 'loginData';
 const AI_NAME_KEY = 'aiName';
 const MONSTER_KEY = 'monsterState';
 const TODO_LIST_KEY = 'toDoList';
+const MOOD_HISTORY_KEY = 'moodHistory';
 
 const getStressHistory = (): StressRecord[] => {
   try {
@@ -63,6 +64,17 @@ const getToDoList = (): ToDoItem[] => {
         return [];
     }
 };
+
+const getMoodHistory = (): MoodRecord[] => {
+  try {
+    const historyJson = localStorage.getItem(MOOD_HISTORY_KEY);
+    return historyJson ? JSON.parse(historyJson) : [];
+  } catch (error) {
+    console.error("Could not parse mood history:", error);
+    return [];
+  }
+};
+
 
 const addStressRecord = (record: StressRecord) => {
   try {
@@ -113,6 +125,7 @@ const App: React.FC = () => {
   const [loginBonusInfo, setLoginBonusInfo] = useState<{ days: number; points: number } | null>(null);
   const [toDoList, setToDoList] = useState<ToDoItem[]>(getToDoList);
   const [diaryHistory, setDiaryHistory] = useState<DiaryEntry[]>(getDiaryHistory);
+  const [moodHistory, setMoodHistory] = useState<MoodRecord[]>(getMoodHistory);
 
 
   useEffect(() => {
@@ -183,6 +196,14 @@ const App: React.FC = () => {
         console.error("Could not save diary history:", error);
     }
    }, [diaryHistory]);
+   
+   useEffect(() => {
+    try {
+        localStorage.setItem(MOOD_HISTORY_KEY, JSON.stringify(moodHistory));
+    } catch (error) {
+        console.error("Could not save mood history:", error);
+    }
+  }, [moodHistory]);
 
 
   const handleSaveAiName = (name: string) => {
@@ -257,6 +278,16 @@ const App: React.FC = () => {
       setPowerBank(prev => prev + SLEEP_BONUS);
     }
     setIsSleepDiaryModalOpen(false);
+  };
+  
+  const handleSaveMood = (record: MoodRecord) => {
+    setMoodHistory(prev => {
+        // 同じ日付の記録があれば上書きし、なければ追加する
+        const newHistory = prev.filter(r => r.date !== record.date);
+        newHistory.push(record);
+        // 日付の降順でソートして返す
+        return newHistory.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    });
   };
 
   const handleAttack = (power: number) => {
@@ -378,6 +409,8 @@ const App: React.FC = () => {
                     onOpenToDo={() => setIsToDoModalOpen(true)}
                     onDeleteToDo={handleDeleteToDo}
                     onToggleFavoriteToDo={handleToggleFavoriteToDo}
+                    moodHistory={moodHistory}
+                    onSaveMood={handleSaveMood}
                 />;
       case 'CHAT':
         if (!aiName) {
@@ -413,6 +446,8 @@ const App: React.FC = () => {
                     onOpenToDo={() => setIsToDoModalOpen(true)}
                     onDeleteToDo={handleDeleteToDo}
                     onToggleFavoriteToDo={handleToggleFavoriteToDo}
+                    moodHistory={moodHistory}
+                    onSaveMood={handleSaveMood}
                 />;
     }
   };
