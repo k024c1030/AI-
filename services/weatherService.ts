@@ -5,29 +5,31 @@ import type { WeatherData, LocationPreference } from '../types';
 // その後、バックエンドは秘密鍵を使用してOpenWeatherMap APIを呼び出します。
 // TODO: バックエンドが完成したら、このモックを実際の `fetch` 呼び出しに置き換えてください。
 
-const MOCK_WEATHER_DATA: Record<string, WeatherData> = {
-  sunny: {
-    icon: '01d',
-    temp_c: 25,
-    description: '快晴',
-    message: '良い天気！ちょっと散歩でもしてみる？',
-    fetched_at: new Date().toISOString(),
-  },
-  cloudy: {
-    icon: '04d',
-    temp_c: 18,
-    description: '曇り',
-    message: '曇りだけど、心は晴れやかにいこう。',
-    fetched_at: new Date().toISOString(),
-  },
-  rainy: {
-    icon: '10d',
-    temp_c: 15,
-    description: '雨',
-    message: '雨の日はゆっくりしよ。温かいものでも飲もう。',
-    fetched_at: new Date().toISOString(),
-  },
+const weatherConditions: Omit<WeatherData, 'temp_c' | 'feels_like_c' | 'fetched_at' | 'description'>[] = [
+    { icon: 'sun', message: '今日は良い天気！肩の力抜こう', code: 800, ttl_seconds: 7200 },
+    { icon: 'cloud', message: '曇り空でも、ペースは自分で', code: 803, ttl_seconds: 7200 },
+    { icon: 'cloud', message: '気張っていこう。とりあえず深呼吸', code: 804, ttl_seconds: 7200 },
+    { icon: 'rain', message: '今日１日は無理はしないで', code: 501, ttl_seconds: 7200 },
+    { icon: 'storm', message: '安全第一で、今日はゆっくり', code: 211, ttl_seconds: 7200 },
+    { icon: 'snow', message: 'あったかくしてね、足元注意', code: 601, ttl_seconds: 7200 },
+    { icon: 'fog', message: '視界ぼんやり、予定もゆるっと', code: 741, ttl_seconds: 7200 },
+    { icon: 'wind', message: '風強め。移動は余裕をもって', code: 771, ttl_seconds: 7200 },
+    { icon: 'hot', message: 'こまめに水分、自分を労わろう', code: 904, ttl_seconds: 7200 },
+    { icon: 'cold', message: '冷え込み注意。小さな温かさを', code: 903, ttl_seconds: 7200 },
+];
+
+const descriptionMap: Record<string, string> = {
+    sun: '快晴',
+    cloud: '曇り',
+    rain: '雨',
+    storm: '雷雨',
+    snow: '雪',
+    fog: '霧',
+    wind: '強風',
+    hot: '猛暑',
+    cold: '寒い',
 };
+
 
 export const fetchWeather = async (params: LocationPreference): Promise<WeatherData> => {
   console.log("Fetching weather for:", params);
@@ -40,18 +42,16 @@ export const fetchWeather = async (params: LocationPreference): Promise<WeatherD
     throw new Error("Failed to fetch weather data.");
   }
   
-  // 実際のアプリではlat/lon/qを使ってデータを取得します。ここではモックを循環させるだけです。
-  const weatherTypes = Object.keys(MOCK_WEATHER_DATA);
-  const randomWeather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+  const randomCondition = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
+  const temp = randomCondition.icon === 'hot' ? 32 : randomCondition.icon === 'cold' ? 5 : 15 + Math.random() * 10;
   
-  const weatherData = MOCK_WEATHER_DATA[randomWeather];
-
-  // 場所名が提供されていればそれを使用し、なければデフォルト値を使用
   const locationName = params.name || (params.query ? params.query : "あなたの場所");
 
   return {
-      ...weatherData,
-      description: `${locationName}は${weatherData.description}`, // 説明に場所を追加
+      ...randomCondition,
+      temp_c: Math.round(temp),
+      feels_like_c: Math.round(temp - 2 + Math.random() * 4),
+      description: `${locationName}は${descriptionMap[randomCondition.icon]}`,
       fetched_at: new Date().toISOString(),
   };
 };

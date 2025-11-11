@@ -9,9 +9,9 @@ interface MoodPickerModalProps {
 }
 
 const MOODS = [
-    { emoji: '😭', score: -3 }, { emoji: '😥', score: -2 }, { emoji: '😟', score: -1 },
+    { emoji: '😭', score: -3 }, { emoji: '😨', score: -2 }, { emoji: '☹️', score: -1 },
     { emoji: '😐', score: 0 },
-    { emoji: '🙂', score: 1 }, { emoji: '😄', score: 2 }, { emoji: '😆', score: 3 },
+    { emoji: '🙂', score: 1 }, { emoji: '☺️', score: 2 }, { emoji: '😁', score: 3 },
 ];
 
 const MoodPickerModal: React.FC<MoodPickerModalProps> = ({ onClose, onSave, moodHistory }) => {

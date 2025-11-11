@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { AppState, Monster, StressRecord, SleepRecord, DiaryEntry, ToDoItem, MoodRecord } from './types';
 import Home from './components/Home';
 import ChatWindow from './components/ChatWindow';
@@ -126,6 +126,8 @@ const App: React.FC = () => {
   const [toDoList, setToDoList] = useState<ToDoItem[]>(getToDoList);
   const [diaryHistory, setDiaryHistory] = useState<DiaryEntry[]>(getDiaryHistory);
   const [moodHistory, setMoodHistory] = useState<MoodRecord[]>(getMoodHistory);
+  const [snackbar, setSnackbar] = useState<{ show: boolean; message: string; onUndo?: () => void }>({ show: false, message: '' });
+  const snackbarTimeoutRef = useRef<number | null>(null);
 
 
   useEffect(() => {
@@ -281,13 +283,37 @@ const App: React.FC = () => {
   };
   
   const handleSaveMood = (record: MoodRecord) => {
+    const today = new Date().toISOString().split('T')[0];
+    const previousMood = moodHistory.find(r => r.date === today);
+
     setMoodHistory(prev => {
-        // 同じ日付の記録があれば上書きし、なければ追加する
         const newHistory = prev.filter(r => r.date !== record.date);
         newHistory.push(record);
-        // 日付の降順でソートして返す
         return newHistory.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     });
+
+    if (snackbarTimeoutRef.current) {
+        clearTimeout(snackbarTimeoutRef.current);
+    }
+
+    setSnackbar({
+        show: true,
+        message: '今日の状態を記録しました。',
+        onUndo: () => {
+            setMoodHistory(prev => {
+                let restoredHistory = prev.filter(r => r.date !== today);
+                if (previousMood) {
+                    restoredHistory.push(previousMood);
+                }
+                return restoredHistory.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            });
+            setSnackbar({ show: false, message: '' });
+        }
+    });
+
+    snackbarTimeoutRef.current = window.setTimeout(() => {
+        setSnackbar({ show: false, message: '' });
+    }, 2000);
   };
 
   const handleAttack = (power: number) => {
@@ -516,6 +542,16 @@ const App: React.FC = () => {
             points={loginBonusInfo.points}
         />
       )}
+      {snackbar.show && (
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-4 animate-fade-in-up z-50">
+                <p>{snackbar.message}</p>
+                {snackbar.onUndo && (
+                    <button onClick={snackbar.onUndo} className="font-bold text-teal-300 hover:text-teal-200">
+                        取り消す
+                    </button>
+                )}
+            </div>
+        )}
     </div>
   );
 };

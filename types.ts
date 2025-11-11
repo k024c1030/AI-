@@ -72,11 +72,14 @@ export interface LocationPreference {
 }
 
 export interface WeatherData {
-  icon: string; // Weather icon code from OpenWeatherMap
+  icon: 'sun' | 'cloud' | 'rain' | 'storm' | 'snow' | 'fog' | 'wind' | 'hot' | 'cold';
   temp_c: number;
+  feels_like_c: number;
+  code: number;
   description: string;
   message: string;
   fetched_at: string; // ISO string
+  ttl_seconds: number;
 }
 
 export interface MoodRecord {

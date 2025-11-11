@@ -11,6 +11,18 @@ interface WeatherAndMoodProps {
     onSaveMood: (record: MoodRecord) => void;
 }
 
+const weatherIconMap: Record<string, string> = {
+    sun: '☀️',
+    cloud: '☁️',
+    rain: '🌧️',
+    storm: '⛈️',
+    snow: '❄️',
+    fog: '🌫️',
+    wind: '🌬️',
+    hot: '🥵',
+    cold: '🥶',
+};
+
 const WeatherAndMood: React.FC<WeatherAndMoodProps> = ({ moodHistory, onSaveMood }) => {
     const [locationPref, setLocationPref] = useState<LocationPreference | null>(null);
     const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -43,6 +55,9 @@ const WeatherAndMood: React.FC<WeatherAndMoodProps> = ({ moodHistory, onSaveMood
         setIsLoading(true);
         setError(null);
         try {
+            // NOTE: This is a mock. In a real app, this would be:
+            // const response = await fetch(`/api/weather?lat=${pref.lat}&lon=${pref.lon}`);
+            // const data = await response.json();
             const data = await fetchWeather(pref);
             setWeather(data);
         } catch (err) {
@@ -80,7 +95,6 @@ const WeatherAndMood: React.FC<WeatherAndMoodProps> = ({ moodHistory, onSaveMood
     };
 
     const handleSaveManualLocation = (query: string, name: string) => {
-        // 実際のアプリでは、バックエンドがジオコーディングを処理します。ここではクエリを保存するだけです。
         const pref: LocationPreference = { method: 'manual', query, name };
         saveLocationPref(pref);
         setShowManualModal(false);
@@ -111,11 +125,15 @@ const WeatherAndMood: React.FC<WeatherAndMoodProps> = ({ moodHistory, onSaveMood
             return (
                 <div className="text-left w-full">
                     <div className="flex items-center gap-2">
-                         <img src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`} alt={weather.description} className="w-12 h-12" />
+                         <span className="text-4xl">{weatherIconMap[weather.icon] || '❔'}</span>
                          <div>
-                            <div className="flex items-baseline gap-2">
+                            <div className="flex items-baseline gap-2 group relative">
                                 <p className="font-bold text-2xl text-slate-700">{Math.round(weather.temp_c)}°C</p>
-                                <p className="text-[10px] text-slate-400">({timeString}取得)</p>
+                                <p className="text-xs text-slate-500 cursor-help">({timeString}取得)</p>
+                                <div className="absolute bottom-full left-0 mb-2 w-max px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                    {new Date(weather.fetched_at).toLocaleString('ja-JP')}
+                                    <svg className="absolute text-slate-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255"><polygon points="0,0 127.5,127.5 255,0"/></svg>
+                                </div>
                             </div>
                             <p className="text-xs text-slate-500">{weather.description}</p>
                          </div>
