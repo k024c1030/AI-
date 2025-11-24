@@ -1,17 +1,26 @@
+
 import React, { useState } from 'react';
 
 interface ManualLocationModalProps {
     onClose: () => void;
-    onSave: (query: string, name: string) => void;
+    onSave: (zip: string) => void;
 }
 
 const ManualLocationModal: React.FC<ManualLocationModalProps> = ({ onClose, onSave }) => {
-    const [query, setQuery] = useState('');
+    const [zip, setZip] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (query.trim()) {
-            onSave(query.trim(), query.trim());
+        // 簡単なバリデーション (数字とハイフンのみ許可、全角は半角へ変換)
+        const cleanedZip = zip.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/-/g, '');
+        
+        // 郵便番号形式チェック (3桁-4桁 または 7桁)
+        if (cleanedZip.match(/^\d{7}$/)) {
+            // ハイフンを入れて保存形式を統一 (例: 160-0022)
+            const formattedZip = `${cleanedZip.slice(0, 3)}-${cleanedZip.slice(3)}`;
+            onSave(formattedZip);
+        } else {
+            alert("正しい郵便番号を入力してください (例: 160-0022)");
         }
     };
 
@@ -24,21 +33,21 @@ const ManualLocationModal: React.FC<ManualLocationModalProps> = ({ onClose, onSa
                     </svg>
                 </button>
                 <h2 className="text-xl font-bold text-slate-800 mb-4 text-center">場所を手動で設定</h2>
-                <p className="text-slate-600 text-sm text-center mb-6">市区町村名や郵便番号を入力してください。</p>
+                <p className="text-slate-600 text-sm text-center mb-6">郵便番号を入力してください。<br/>(例: 160-0022)</p>
                 <form onSubmit={handleSubmit}>
                     <input
                         type="text"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="例: 東京都渋谷区"
-                        className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                        value={zip}
+                        onChange={(e) => setZip(e.target.value)}
+                        placeholder="160-0022"
+                        className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none text-center text-lg tracking-wider"
                         required
                         autoFocus
                     />
                     <button
                         type="submit"
-                        disabled={!query.trim()}
-                        className="mt-4 w-full px-6 py-3 bg-blue-500 text-white rounded-xl font-semibold hover:bg-blue-600 disabled:bg-slate-300"
+                        disabled={!zip.trim()}
+                        className="mt-4 w-full px-6 py-3 bg-blue-500 text-white rounded-xl font-semibold hover:bg-blue-600 disabled:bg-slate-300 transition-colors"
                     >
                         設定する
                     </button>

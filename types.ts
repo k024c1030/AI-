@@ -1,3 +1,4 @@
+
 export enum MessageRole {
   USER = 'user',
   MODEL = 'model',
@@ -67,18 +68,16 @@ export interface LocationPreference {
   method: 'auto' | 'manual';
   lat?: number;
   lon?: number;
-  query?: string;
-  name?: string; // e.g., "Tokyo"
+  zip?: string; // 郵便番号 (手動設定用)
+  name?: string; // 表示用名称（任意）
 }
 
+// サーバーからのレスポンス仕様に合わせた定義
 export interface WeatherData {
-  icon: 'sun' | 'cloud' | 'rain' | 'storm' | 'snow' | 'fog' | 'wind' | 'hot' | 'cold';
+  condition: 'sun' | 'cloud' | 'rain' | 'snow';
   temp_c: number;
-  feels_like_c: number;
-  code: number;
-  description: string;
   message: string;
-  fetched_at: string; // ISO string
+  updated_at: string; // ISO string
   ttl_seconds: number;
 }
 

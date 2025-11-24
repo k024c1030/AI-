@@ -1,5 +1,6 @@
+
 // 手動で更新するバージョン。キャッシュ構造の変更や大きなバグ修正時に更新します。
-const SW_VERSION = "v4-ttl-fix"; 
+const SW_VERSION = "v5-weather-api"; 
 const STATIC_CACHE = `static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${SW_VERSION}`;
 
@@ -9,12 +10,9 @@ const STATIC_ASSETS = [
   "/offline.html",
   "/manifest.json",
   "/monsters/kaiju_brown.png"
-  // CSSやJSファイルが別にあればここに追加
 ];
 
 self.addEventListener("install", (event) => {
-  // `skipWaiting()`を呼び出すことで、新しいService Workerが即座にアクティブになります。
-  // これにより、ユーザーはページをリロードすることなく最新の機能を利用できます。
   self.skipWaiting();
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
@@ -25,12 +23,10 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  // 古いキャッシュをクリーンアップします。
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          // 現在のバージョンと異なるキャッシュはすべて削除します。
           if (key !== STATIC_CACHE && key !== DYNAMIC_CACHE) {
             console.log("Deleting old cache:", key);
             return caches.delete(key);
@@ -38,8 +34,6 @@ self.addEventListener("activate", (event) => {
         })
       );
     }).then(() => {
-      // `clients.claim()`により、Service Workerがアクティブになった後、
-      // 即座にすべての開いているページを制御下に置きます。
       return self.clients.claim();
     })
   );
@@ -55,14 +49,15 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 天気APIへのリクエスト (/api/weather) は Stale-While-Revalidate 戦略 + TTL で処理
+  // 天気APIへのリクエスト (/api/weather) 
+  // 戦略: Cache First with TTL Check (Stale-while-revalidate fallback)
   if (url.pathname.startsWith('/api/weather')) {
     event.respondWith(
       (async () => {
         const cache = await caches.open(DYNAMIC_CACHE);
         const cachedResponse = await cache.match(request);
 
-        // ネットワークから取得してキャッシュを更新する非同期関数
+        // ネットワークから取得し、キャッシュを更新する関数
         const fetchAndCache = async () => {
           try {
             const networkResponse = await fetch(request);
@@ -71,52 +66,55 @@ self.addEventListener("fetch", (event) => {
             }
             return networkResponse;
           } catch (error) {
-            console.error("Fetch failed:", error);
-            return undefined; // 失敗を明確にする
+            console.warn("Weather fetch failed:", error);
+            throw error;
           }
         };
 
-        if (!cachedResponse) {
-          // キャッシュがない場合、ネットワークからの応答を待つしかない
-          console.log("Weather: No cache, fetching from network.");
-          return (await fetchAndCache()) || new Response(JSON.stringify({ error: "Offline" }), { status: 503, headers: { 'Content-Type': 'application/json' } });
+        if (cachedResponse) {
+          try {
+            // Response body can only be consumed once, so we clone it
+            const bodyClone = await cachedResponse.clone().json();
+            
+            // TTLチェック
+            const fetchedAt = new Date(bodyClone.updated_at).getTime();
+            const ttl = (bodyClone.ttl_seconds || 7200) * 1000;
+            const now = Date.now();
+
+            if (now < fetchedAt + ttl) {
+               // TTL内ならキャッシュを返す
+               console.log("Weather cache hit (fresh)");
+               return cachedResponse;
+            } else {
+               // TTL切れ -> ネットワークへ
+               console.log("Weather cache expired. Fetching network...");
+               try {
+                 return await fetchAndCache();
+               } catch (e) {
+                 // ネットワークエラー時は、期限切れでもキャッシュを返す (Stale fallback)
+                 console.log("Network failed, returning stale cache.");
+                 return cachedResponse;
+               }
+            }
+          } catch (e) {
+            // キャッシュ解析エラー等はネットワークへ
+            return fetchAndCache();
+          }
         }
 
-        // キャッシュがある場合、TTLをチェック
-        const cachedData = await cachedResponse.clone().json();
-        const fetchedAt = new Date(cachedData.fetched_at).getTime();
-        const ttl = (cachedData.ttl_seconds || 7200) * 1000; // デフォルト2時間
-        const isStale = Date.now() > fetchedAt + ttl;
-
-        if (isStale) {
-          console.log("Weather cache is stale. Forcing re-fetch.");
-          // TTL切れ: ネットワーク取得を試み、失敗したら古いキャッシュを返す
-          const networkResponse = await fetchAndCache();
-          return networkResponse || cachedResponse;
-        } else {
-          console.log("Weather cache is fresh. Using stale-while-revalidate.");
-          // TTL内: キャッシュを即座に返し、バックグラウンドで静かに更新
-          fetchAndCache(); // awaitしないのがポイント
-          return cachedResponse;
+        // キャッシュなし -> ネットワークへ
+        try {
+          return await fetchAndCache();
+        } catch (e) {
+          // オフラインかつキャッシュなし
+          return new Response(JSON.stringify({ error: "Offline" }), { 
+            status: 503, 
+            headers: { 'Content-Type': 'application/json' } 
+          });
         }
       })()
     );
     return;
-  }
-  
-  // OpenWeatherMapのアイコンも動的キャッシュ（Cache First）
-  if (url.hostname === 'openweathermap.org') {
-      event.respondWith(
-        caches.open(DYNAMIC_CACHE).then(cache => {
-            return cache.match(request).then(response => {
-                return response || fetch(request).then(networkResponse => {
-                    cache.put(request, networkResponse.clone());
-                    return networkResponse;
-                });
-            });
-        })
-      );
-      return;
   }
   
   // HTMLページのナビゲーションリクエストは Network-First 戦略
@@ -127,7 +125,6 @@ self.addEventListener("fetch", (event) => {
           return networkResponse;
         })
         .catch(async () => {
-          // ネットワークが失敗したらキャッシュから返す
           const cachedResponse = await caches.match(request);
           return cachedResponse || await caches.match('/offline.html');
         })
