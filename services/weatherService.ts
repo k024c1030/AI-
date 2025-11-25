@@ -1,34 +1,37 @@
-
 import type { WeatherData, LocationPreference } from '../types';
 
-/**
- * バックエンドAPI (/api/weather) から天気データを取得します。
- * APIキーはバックエンド側で管理されるため、フロントエンドには露出させません。
- */
-export const fetchWeather = async (params: LocationPreference): Promise<WeatherData> => {
-  let url = '/api/weather?';
+// ダミーの天気データを作成する関数
+const getMockWeather = (): WeatherData => {
+  const mockData: WeatherData = = {
+    condition: 'sun',
+    temp_c: 22.5,
+    message: '素晴らしい天気です！散歩日和ですね。',
+    updated_at: new Date().toISOString(),
+    //ほかに必要な項目があれば追加
+  }as WeatherData;
+  return mockData; //作ったデータを返す
+};
 
-  if (params.method === 'auto' && params.lat !== undefined && params.lon !== undefined) {
-    // 緯度経度による自動取得
-    url += `lat=${params.lat}&lon=${params.lon}`;
-  } else if (params.method === 'manual' && params.zip) {
-    // 郵便番号による手動取得 (国コードJPは固定)
-    url += `zip=${params.zip}&country=JP`;
-  } else {
-    throw new Error("位置情報パラメータが不足しています。");
-  }
+export const fetchWeather = async (params: LocationPreference): Promise<WeatherData> => {
+  //ログを出して動いてるか確認する。
+  console.log("[テストモード]天気データを取得したフリをします...", params);
 
   try {
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-        throw new Error(`Weather API Error: ${response.status} ${response.statusText}`);
-    }
+  //通信してる雰囲気を出すための0.5秒待ち
+  await new Promise(resolve => setTimeout(resolve, 500));
 
-    const data: WeatherData = await response.json();
-    return data;
+  //ダミーデータを取得
+  const data = getMockWeather();
+
+  //ログを出します
+  console.log("[テストモード]データ取得成功", data);
+
+  //データを画面に出す
+  return data;
   } catch (error) {
-    console.error("Failed to fetch weather:", error);
+
+    //もしエラーが起きたらここに飛ぶ
+    console.error("エラーが発生しました:", error);
     throw error;
   }
 };
